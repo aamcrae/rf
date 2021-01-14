@@ -25,7 +25,7 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 	for _, n := range tm {
-		fmt.Printf("%d,", n)
+		fmt.Printf("%d,", n.Microseconds())
 	}
-	fmt.Printf("\n");
+	fmt.Printf("\n")
 }

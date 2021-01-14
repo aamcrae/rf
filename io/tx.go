@@ -15,9 +15,9 @@ const defaultGap = 8000
 const tx_event = 18
 
 type Transmitter struct {
-	pru *pru.PRU
+	pru  *pru.PRU
 	gpio uint32
-	Gap time.Duration
+	Gap  time.Duration
 	lock sync.Mutex
 }
 
@@ -48,12 +48,12 @@ func (tx *Transmitter) Send(msg []time.Duration, repeats int) error {
 	e := tx.pru.Event(tx_event)
 	r := u.Ram.Open()
 	params := []interface{}{
-		uint32(tx_event - 16),		// Event to send when complete
-		uint32(tx.gpio),			// GPIO to use
-		uint32(repeats),			// Number of message repeats
-		uint32(len(msg) + 1),		// Length of message
-		uint32(20),					// Address of data
-		uint32(pru.Ticks(tx.Gap)),  // Inter-message gap as first time
+		uint32(tx_event - 16),     // Event to send when complete
+		uint32(tx.gpio),           // GPIO to use
+		uint32(repeats),           // Number of message repeats
+		uint32(len(msg) + 1),      // Length of message
+		uint32(20),                // Address of data
+		uint32(pru.Ticks(tx.Gap)), // Inter-message gap as first time
 	}
 	for _, v := range params {
 		binary.Write(r, tx.pru.Order, v)
@@ -63,7 +63,7 @@ func (tx *Transmitter) Send(msg []time.Duration, repeats int) error {
 		binary.Write(r, tx.pru.Order, uint32(pru.Ticks(t)))
 		tout += t
 	}
-	fmt.Printf("Sending %d bits, %d repeasts, duration = %s\n", len(msg), repeats, tout * time.Duration(repeats))
+	fmt.Printf("Sending %d bits, %d repeasts, duration = %s\n", len(msg), repeats, tout*time.Duration(repeats))
 	start := time.Now()
 	err := u.Run(prutx_img)
 	if err != nil {

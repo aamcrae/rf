@@ -13,7 +13,7 @@ import (
 
 var port = flag.Int("port", 8080, "Web server port number")
 var gpio = flag.Int("gpio", 15, "PRU GPIO bit number")
-var messages = flag.String("messages","/etc/rf-messages", "File containing messages")
+var messages = flag.String("messages", "/etc/rf-messages", "File containing messages")
 var verbose = flag.Bool("v", false, "Log more information")
 var repeats = flag.Int("repeats", 3, "Number of message repeats")
 
@@ -41,7 +41,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func handler(tx *io.Transmitter, key string, msg []time.Duration) (func(http.ResponseWriter, *http.Request)) {
+func handler(tx *io.Transmitter, key string, msg []time.Duration) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if *verbose {
 			log.Printf("Sending message %s", key)

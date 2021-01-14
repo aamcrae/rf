@@ -41,7 +41,7 @@ func ReadMessageFile(name string) (map[string][]time.Duration, error) {
 			if err != nil {
 				return msgs, fmt.Errorf("%s: line %d, timing %d (%s) bad format", name, lineno, i, t)
 			}
-			msg = append(msg, time.Duration(v) * time.Microsecond)
+			msg = append(msg, time.Duration(v)*time.Microsecond)
 		}
 		msgs[strs[0]] = msg
 	}
