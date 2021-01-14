@@ -4,6 +4,10 @@
 *.dll
 *.so
 *.dylib
+capture/capture
+decode/decode
+sender/sender
+server/server
 
 # Test binary, built with `go test -c`
 *.test
