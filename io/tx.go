@@ -5,6 +5,7 @@ package io
 import (
 	"encoding/binary"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/aamcrae/pru"
@@ -17,6 +18,7 @@ type Transmitter struct {
 	pru *pru.PRU
 	gpio uint32
 	Gap time.Duration
+	lock sync.Mutex
 }
 
 func NewTransmitter(gpio uint) (*Transmitter, error) {
@@ -39,6 +41,9 @@ func (tx *Transmitter) Close() {
 
 // Send a message.
 func (tx *Transmitter) Send(msg []time.Duration, repeats int) error {
+	// Only one message can be sent at a time.
+	tx.lock.Lock()
+	defer tx.lock.Unlock()
 	u := tx.pru.Unit(0)
 	e := tx.pru.Event(tx_event)
 	r := u.Ram.Open()

@@ -13,7 +13,7 @@ import (
 
 var port = flag.Int("port", 8080, "Web server port number")
 var gpio = flag.Int("gpio", 15, "PRU GPIO bit number")
-var messages = flag.String("messages","", "File containing messages")
+var messages = flag.String("messages","/etc/rf-messages", "File containing messages")
 var verbose = flag.Bool("v", false, "Log more information")
 var repeats = flag.Int("repeats", 3, "Number of message repeats")
 
@@ -28,11 +28,10 @@ func main() {
 		log.Fatalf("%s: %v", *messages, err)
 	}
 	for k, m := range msgs {
-		log.Printf("Message %s, length %d", k, len(m))
 		if *verbose {
 			log.Printf("Message %s, length %d", k, len(m))
 		}
-		http.Handle(fmt.Sprintf("tx/%s", k), http.HandlerFunc(handler(tx, k, m)))
+		http.Handle(fmt.Sprintf("/tx/%s", k), http.HandlerFunc(handler(tx, k, m)))
 	}
 	url := fmt.Sprintf(":%d", *port)
 	if *verbose {
