@@ -6,17 +6,18 @@ import (
 	"log"
 
 	"github.com/aamcrae/rf/io"
+	"github.com/aamcrae/rf/message"
 )
 
 var file = flag.String("file", "", "Message file database")
-var message = flag.String("message", "", "Message name")
+var msg = flag.String("message", "", "Message name")
 var repeats = flag.Int("repeat", 3, "Number of repeats")
 var gpio = flag.Int("gpio", 15, "Output GPIO number")
 
 func main() {
 	flag.Parse()
 
-	msgs, err := io.ReadMessageFile(*file)
+	msgs, err := message.ReadMessageFile(*file)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -26,12 +27,12 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 	defer tx.Close()
-	m, ok := msgs[*message]
+	m, ok := msgs[*msg]
 	if !ok {
-		log.Fatalf("%s: message not found", *message)
+		log.Fatalf("%s: message not found", *msg)
 	}
 	err = tx.Send(m, *repeats)
 	if err != nil {
-		log.Fatalf("%s: %v", *message, err)
+		log.Fatalf("%s: %v", *msg, err)
 	}
 }

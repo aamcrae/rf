@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aamcrae/rf/io"
+	"github.com/aamcrae/rf/message"
 )
 
 var port = flag.Int("port", 8080, "Web server port number")
@@ -23,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("NewTransmitter: %v", err)
 	}
-	msgs, err := io.ReadMessageFile(*messages)
+	msgs, err := message.ReadMessageFile(*messages)
 	if err != nil {
 		log.Fatalf("%s: %v", *messages, err)
 	}
