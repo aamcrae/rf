@@ -13,8 +13,8 @@ import (
 //  <text-key> base message-timings
 //
 // The message timings are microsecond intervals for 1-0-1-0... transitions.
-func ReadMessageFile(name string) (map[string]*Message, error) {
-	msgs := make(map[string]*Message)
+func ReadMessageFile(name string) ([]*Message, error) {
+	msgs := make([]*Message, 0)
 	f, err := os.Open(name)
 	if err != nil {
 		return msgs, err
@@ -44,7 +44,9 @@ func ReadMessageFile(name string) (map[string]*Message, error) {
 			}
 			raw = append(raw, int(v))
 		}
-		msgs[strs[0]] = NewMessage(Raw(raw), int(base))
+		nm := NewMessage(Raw(raw), int(base))
+		nm.Name = strs[0]
+		msgs = append(msgs, nm)
 	}
 	return msgs, nil
 }

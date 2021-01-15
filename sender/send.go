@@ -17,11 +17,15 @@ var gpio = flag.Int("gpio", 15, "Output GPIO number")
 func main() {
 	flag.Parse()
 
-	msgs, err := message.ReadMessageFile(*file)
+	mList, err := message.ReadMessageFile(*file)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	log.Printf("%d messages read", len(msgs))
+	log.Printf("%d messages read", len(mList))
+	msgs := make(map[string]*message.Message)
+	for _, m := range mList {
+		msgs[m.Name] = m
+	}
 	tx, err := io.NewTransmitter(uint(*gpio))
 	if err != nil {
 		log.Fatalf("%s", err)

@@ -13,13 +13,23 @@ import (
 )
 
 var tolerance = flag.Int("tolerance", 20, "Percent tolerance")
+var referenceFile = flag.String("messages", "", "Database of RF messages for reference")
 var min_msg = flag.Int("min", 10, "Mininum number of changes")
 var max_msg = flag.Int("max", 140, "Maximum number of changes")
 var base_time = flag.Int("base", 0, "Microseconds for bit period")
 var gpio = flag.Int("gpio", 15, "Input GPIO number for capture")
 
+var reference []*message.Message
+
 func main() {
 	flag.Parse()
+	var err error
+	if len(*referenceFile) > 0 {
+		reference, err = message.ReadMessageFile(*referenceFile)
+		if err != nil {
+			log.Fatalf("%s: %v", *referenceFile, err)
+		}
+	}
 	inp, err := io.NewReceiver(uint(*gpio))
 	if err != nil {
 		log.Fatalf("GPIO %d receiver failed: %v", *gpio, err)

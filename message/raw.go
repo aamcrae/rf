@@ -73,6 +73,7 @@ func gcd(v, base, t int) (int, bool) {
 	return d, n < (v+t) && n > (v-t)
 }
 
+// EstimateBase attempts to extract a bit length base from the raw messages
 func EstimateBase(msgs []Raw, tolerance int) int {
 	var gcds [MAX_GCD]int
 	var avg [MAX_GCD]int

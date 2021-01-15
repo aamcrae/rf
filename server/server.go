@@ -23,15 +23,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("NewTransmitter: %v", err)
 	}
-	msgs, err := message.ReadMessageFile(*messages)
+	mList, err := message.ReadMessageFile(*messages)
 	if err != nil {
 		log.Fatalf("%s: %v", *messages, err)
 	}
-	for k, m := range msgs {
+	for _, m := range mList {
 		if *verbose {
-			log.Printf("Message %s, length %d", k, len(m.Raw))
+			log.Printf("Message %s, length %d", m.Name, len(m.Raw))
 		}
-		http.Handle(fmt.Sprintf("/tx/%s", k), http.HandlerFunc(handler(tx, k, m)))
+		http.Handle(fmt.Sprintf("/tx/%s", m.Name), http.HandlerFunc(handler(tx, m)))
 	}
 	url := fmt.Sprintf(":%d", *port)
 	if *verbose {
@@ -41,14 +41,14 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func handler(tx *io.Transmitter, key string, msg *message.Message) func(http.ResponseWriter, *http.Request) {
+func handler(tx *io.Transmitter, msg *message.Message) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if *verbose {
-			log.Printf("Sending message %s", key)
+			log.Printf("Sending message %s", msg.Name)
 		}
 		err := tx.Send(msg.Raw, *repeats)
 		if err != nil {
-			log.Printf("Message %s: %v", key, err)
+			log.Printf("Message %s: %v", msg.Name, err)
 		}
 	}
 }

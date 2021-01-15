@@ -6,6 +6,7 @@ import (
 )
 
 type Message struct {
+	Name  string
 	Raw   Raw
 	Count []int
 	Base  int
