@@ -5,14 +5,6 @@ import (
 	"sort"
 )
 
-const (
-	GCD1    = iota // Min
-	GCD2    = iota // Min / 2
-	GCD3    = iota // Min / 3
-	GCD4    = iota // Min / 4
-	MAX_GCD = iota
-)
-
 type Raw []int
 
 // Analyse one raw message, trying to estimate the base sync time by
@@ -71,28 +63,4 @@ func gcd(v, base, t int) (int, bool) {
 	d := int(math.Round(float64(v) / float64(base)))
 	n := d * base
 	return d, n < (v+t) && n > (v-t)
-}
-
-// EstimateBase attempts to extract a bit length base from the raw messages
-func EstimateBase(msgs []Raw, tolerance int) int {
-	var gcds [MAX_GCD]int
-	var avg [MAX_GCD]int
-	var quality [MAX_GCD]int
-	for _, m := range msgs {
-		gcd, est_base, q := m.Analyse(tolerance)
-		gcds[gcd]++
-		avg[gcd] += est_base
-		quality[gcd] += q
-	}
-	count := -1
-	best := -1
-	for i, v := range gcds {
-		if v != 0 {
-			if count < v {
-				count = v
-				best = i
-			}
-		}
-	}
-	return avg[best] / count
 }

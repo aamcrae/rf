@@ -70,7 +70,15 @@ func main() {
 		if len(raw) < *min_messages {
 			log.Fatalf("Need at least %d messages for estimating sync time", *min_messages)
 		}
-		base = message.EstimateBase(raw, *tolerance)
+		b := &message.Base{Tolerance: *tolerance}
+		for _, m := range raw {
+			b.Add(m)
+		}
+		var q int
+		base, q = b.EstimateBase(1)
+		if *verbose {
+			fmt.Printf("Estimate base = %d, quality = %d\n", base, q)
+		}
 	}
 	// Create a map holding commonly decoded strings
 	str_m := make(map[string]*msg)
@@ -100,8 +108,8 @@ func main() {
 				if mp.count == msg_count[len(msg_count)-l-1] {
 					fmt.Fprintf(f, "%s-%d %d", name, l, mp.m.Base)
 					sep := ' '
-					for _, t := range mp.m.Raw {
-						fmt.Fprintf(f, "%c%d", sep, t)
+					for _, t := range mp.m.Count {
+						fmt.Fprintf(f, "%c%d", sep, t * mp.m.Base)
 						sep = ','
 					}
 					fmt.Fprint(f, "\n")
