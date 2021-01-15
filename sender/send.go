@@ -31,7 +31,7 @@ func main() {
 	if !ok {
 		log.Fatalf("%s: message not found", *msg)
 	}
-	err = tx.Send(m, *repeats)
+	err = tx.Send(m.Raw, *repeats)
 	if err != nil {
 		log.Fatalf("%s: %v", *msg, err)
 	}

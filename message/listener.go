@@ -1,7 +1,7 @@
 package message
 
 type Listener struct {
-	timings  []int
+	timings  Raw
 	bit      int
 	Sync     int
 	Gap      int
@@ -24,7 +24,7 @@ func (l *Listener) Clear() {
 	l.timings = nil
 }
 
-func (l *Listener) Next(tv int) []int {
+func (l *Listener) Next(tv int) Raw {
 	b := l.bit
 	l.bit ^= 1 // flip bit
 	if tv < l.Debounce {
@@ -52,4 +52,17 @@ func (l *Listener) Next(tv int) []int {
 		}
 	}
 	return nil
+}
+
+// Given a slice of raw timings, extract all the messages.
+func (l *Listener) Decode(rawInput []int) []Raw {
+	l.Clear()
+	var msgs []Raw
+	for _, tv := range rawInput {
+		t := l.Next(tv)
+		if t != nil {
+			msgs = append(msgs, t)
+		}
+	}
+	return msgs
 }

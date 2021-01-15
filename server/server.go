@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/aamcrae/rf/io"
 	"github.com/aamcrae/rf/message"
@@ -30,7 +29,7 @@ func main() {
 	}
 	for k, m := range msgs {
 		if *verbose {
-			log.Printf("Message %s, length %d", k, len(m))
+			log.Printf("Message %s, length %d", k, len(m.Raw))
 		}
 		http.Handle(fmt.Sprintf("/tx/%s", k), http.HandlerFunc(handler(tx, k, m)))
 	}
@@ -42,12 +41,12 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func handler(tx *io.Transmitter, key string, msg []time.Duration) func(http.ResponseWriter, *http.Request) {
+func handler(tx *io.Transmitter, key string, msg *message.Message) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if *verbose {
 			log.Printf("Sending message %s", key)
 		}
-		err := tx.Send(msg, *repeats)
+		err := tx.Send(msg.Raw, *repeats)
 		if err != nil {
 			log.Printf("Message %s: %v", key, err)
 		}

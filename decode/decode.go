@@ -27,6 +27,11 @@ var output_limit = flag.Int("limit", 1, "Number of output messages to save")
 var capture = flag.Int("capture", 500, "Number of signals to capture")
 var gpio = flag.Int("gpio", 15, "Input GPIO number for capture")
 
+type msg struct {
+	m     *message.Message
+	count int
+}
+
 func main() {
 	flag.Parse()
 	var timings []int
@@ -48,32 +53,40 @@ func main() {
 		}
 		name = "capture"
 	}
-	msgs := message.Decode(timings)
-	if len(msgs) == 0 {
+	l := message.NewListener()
+	l.Gap = *gap
+	l.Min = *min_msg
+	l.Max = *max_msg
+	raw := l.Decode(timings)
+	if len(raw) == 0 {
 		log.Fatalf("No messages found to process")
 	}
 	if *verbose {
-		fmt.Printf("# of messages: %d\n", len(msgs))
+		fmt.Printf("# of messages: %d\n", len(raw))
 	}
 	base := *base_time
 	if base == 0 {
 		// Analyse the message and try and determine a sensible bit period
-		if len(msgs) < *min_messages {
+		if len(raw) < *min_messages {
 			log.Fatalf("Need at least %d messages for estimating sync time", *min_messages)
 		}
-		base = message.BaseTime(msgs, *tolerance)
+		base = message.EstimateBase(raw, *tolerance)
 	}
 	// Create a map holding commonly decoded strings
-	str_count := make(map[string]int)
-	str_message := make(map[string]*message.Message)
-	for _, m := range msgs {
-		m.Normalise(base)
-		str_count[m.Str] = str_count[m.Str] + 1
-		str_message[m.Str] = m
+	str_m := make(map[string]*msg)
+	for _, rw := range raw {
+		m := message.NewMessage(rw, base)
+		mp, ok := str_m[m.Str]
+		if !ok {
+			mp = new(msg)
+			mp.m = m
+			str_m[m.Str] = mp
+		}
+		mp.count++
 	}
 	var msg_count []int
-	for _, v := range str_count {
-		msg_count = append(msg_count, v)
+	for _, mp := range str_m {
+		msg_count = append(msg_count, mp.count)
 	}
 	sort.Ints(msg_count)
 	if len(*output) != 0 {
@@ -82,12 +95,12 @@ func main() {
 			log.Fatalf("%s: %v", *output, err)
 		}
 		defer f.Close()
-		for s, v := range str_count {
+		for _, mp := range str_m {
 			for l := 0; l < *output_limit; l++ {
-				if v == msg_count[len(msg_count)-l-1] {
-					fmt.Fprintf(f, "%s-%d", name, l)
+				if mp.count == msg_count[len(msg_count)-l-1] {
+					fmt.Fprintf(f, "%s-%d %d", name, l, mp.m.Base)
 					sep := ' '
-					for _, t := range str_message[s].Timings {
+					for _, t := range mp.m.Raw {
 						fmt.Fprintf(f, "%c%d", sep, t)
 						sep = ','
 					}
@@ -97,8 +110,8 @@ func main() {
 		}
 	}
 	if *verbose {
-		for s, c := range str_count {
-			fmt.Printf("%3d (%3d): %s\n", c, len(s), message.Summary(s))
+		for s, mp := range str_m {
+			fmt.Printf("%3d (%3d): %s\n", mp.count, len(s), mp.m.RLE)
 		}
 	}
 }
