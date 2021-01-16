@@ -32,9 +32,11 @@ type msg struct {
 
 var reference = make(map[int][]*message.Message)
 var messages = make(map[int]*msg)
+var baseAll message.Base
 
 func main() {
 	flag.Parse()
+	baseAll.tolerance = *tolerance
 	if len(*referenceFile) > 0 {
 		rList, err := message.ReadMessageFile(*referenceFile)
 		if err != nil {
@@ -115,6 +117,7 @@ func reader(c <-chan time.Duration, wg *sync.WaitGroup, l *message.Listener) {
 }
 
 func newMessage(m message.Raw) {
+	baseAll.Add(m)
 	l := len(m)
 	mp, ok := messages[l]
 	if !ok {
