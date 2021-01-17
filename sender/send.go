@@ -14,7 +14,7 @@ var file = flag.String("file", "", "Message file database")
 var msg = flag.String("message", "", "Message name")
 var repeats = flag.Int("repeat", 3, "Number of repeats")
 var gap = flag.Int("gap", 10, "Inter-message gap (milliseconds)")
-var gpio = flag.Int("gpio", 15, "Output GPIO number")
+var gpio = flag.Int("gpio", 15, "Output GPIO number") // PRU unit 0 P8_11
 
 func main() {
 	flag.Parse()

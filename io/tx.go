@@ -11,8 +11,10 @@ import (
 	"github.com/aamcrae/pru"
 )
 
-const defaultGap = 4000
+const defaultGap = 5000
 const tx_event = 18
+const tx_unit = 0
+const tx_int = 2
 
 type Transmitter struct {
 	pru  *pru.PRU
@@ -26,7 +28,7 @@ func NewTransmitter(gpio uint) (*Transmitter, error) {
 	tx.Gap = defaultGap
 	tx.gpio = uint32(gpio)
 	pc := pru.NewConfig()
-	pc.Event2Channel(tx_event, 2).Channel2Interrupt(2, 2)
+	pc.EnableUnit(0).Event2Channel(tx_event, tx_int).Channel2Interrupt(tx_int, tx_int)
 	var err error
 	tx.pru, err = pru.Open(pc)
 	if err != nil {
@@ -44,15 +46,17 @@ func (tx *Transmitter) Send(msg []int, repeats int) error {
 	// Only one message can be sent at a time.
 	tx.lock.Lock()
 	defer tx.lock.Unlock()
-	u := tx.pru.Unit(0)
+	u := tx.pru.Unit(tx_unit)
 	e := tx.pru.Event(tx_event)
 	r := u.Ram.Open()
 	params := []interface{}{
 		uint32(tx_event - 16),                  // Event to send when complete
 		uint32(tx.gpio),                        // GPIO to use
 		uint32(repeats),                        // Number of message repeats
-		uint32(len(msg) + 1),                   // Length of message
+		uint32(len(msg) + 3),                   // Length of message
 		uint32(20),                             // Address of data
+		uint32(pru.MicroSeconds2Ticks(tx.Gap)), // Inter-message gap as first time
+		uint32(pru.MicroSeconds2Ticks(tx.Gap)), // Inter-message gap as first time
 		uint32(pru.MicroSeconds2Ticks(tx.Gap)), // Inter-message gap as first time
 	}
 	for _, v := range params {

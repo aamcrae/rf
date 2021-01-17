@@ -11,7 +11,7 @@ import (
 
 var verbose = flag.Bool("v", false, "Log more information")
 var samples = flag.Int("samples", 500, "Number of samples")
-var gpio = flag.Int("gpio", 15, "Output GPIO number")
+var gpio = flag.Int("gpio", 5, "Output GPIO number") // PRU Unit 1, P8_42
 
 func main() {
 	flag.Parse()

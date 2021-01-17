@@ -13,7 +13,8 @@ import (
 const rx_event = 19
 const rxBufferSize = 128 // 512 bytes each buffer
 const bufCount = 8       // 4K of buffers
-const rxUnit = 1
+const rx_unit = 1
+const rx_int = 3
 
 type Receiver struct {
 	pru      *pru.PRU
@@ -30,7 +31,7 @@ func NewReceiver(gpio uint) (*Receiver, error) {
 	rx := new(Receiver)
 	rx.gpio = uint32(gpio)
 	pc := pru.NewConfig()
-	pc.Event2Channel(rx_event, 2).Channel2Interrupt(2, 2)
+	pc.EnableUnit(rx_unit).Event2Channel(rx_event, rx_int).Channel2Interrupt(rx_int, rx_int)
 	var err error
 	rx.pru, err = pru.Open(pc)
 	if err != nil {
@@ -44,7 +45,7 @@ func (rx *Receiver) Close() {
 }
 
 func (rx *Receiver) Start() (<-chan time.Duration, error) {
-	rx.unit = rx.pru.Unit(rxUnit)
+	rx.unit = rx.pru.Unit(rx_unit)
 	rx.event = rx.pru.Event(rx_event)
 	r := rx.unit.Ram.Open()
 	params := []interface{}{
