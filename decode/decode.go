@@ -55,8 +55,8 @@ func main() {
 	}
 	l := message.NewListener()
 	l.Gap = *gap
-	l.Min = *min_msg
-	l.Max = *max_msg
+	l.MinLen = *min_msg
+	l.MaxLen = *max_msg
 	raw := l.Decode(timings)
 	if len(raw) == 0 {
 		log.Fatalf("No messages found to process")
@@ -109,7 +109,7 @@ func main() {
 					fmt.Fprintf(f, "%s-%d %d", name, l, mp.m.Base)
 					sep := ' '
 					for _, t := range mp.m.Count {
-						fmt.Fprintf(f, "%c%d", sep, t * mp.m.Base)
+						fmt.Fprintf(f, "%c%d", sep, t*mp.m.Base)
 						sep = ','
 					}
 					fmt.Fprint(f, "\n")

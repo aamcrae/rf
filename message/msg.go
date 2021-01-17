@@ -51,7 +51,7 @@ func (m *Message) MatchRaw(raw Raw, start int, tolerance int) int {
 		allow := slop * m.Count[i]
 		mid := m.Count[i] * m.Base
 		r := raw[i]
-		if r >= (mid - allow) && r < (mid + allow) {
+		if r >= (mid-allow) && r < (mid+allow) {
 			count++
 		}
 	}

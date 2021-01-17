@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
 	"strconv"
+	"sync"
 	"text/scanner"
 	"time"
 
@@ -24,9 +24,12 @@ var base_time = flag.Int("base", 0, "Microseconds for bit period")
 var round = flag.Int("round", 10, "Round up base time")
 var gpio = flag.Int("gpio", 15, "Input GPIO number for capture")
 var input = flag.String("input", "", "Input file to be read")
+var debounce = flag.Int("debounce", 100, "Minimum time for transition")
+var tag = flag.String("tag", "tag", "Message tag for output")
+var output = flag.String("output", "", "Output filename")
 
 type msg struct {
-	base message.Base
+	base     message.Base
 	messages []message.Raw
 }
 
@@ -36,7 +39,7 @@ var baseAll message.Base
 
 func main() {
 	flag.Parse()
-	baseAll.tolerance = *tolerance
+	baseAll.Tolerance = *tolerance
 	if len(*referenceFile) > 0 {
 		rList, err := message.ReadMessageFile(*referenceFile)
 		if err != nil {
@@ -49,13 +52,15 @@ func main() {
 	}
 	l := message.NewListener()
 	l.Gap = *gap
-	l.Min = *min_msg
-	l.Max = *max_msg
+	l.MinLen = *min_msg
+	l.MaxLen = *max_msg
+	l.MinPulse = *debounce
 	if len(*input) > 0 {
 		readFromFile(*input, l)
 	} else {
 		capture(l)
 	}
+	fmt.Printf("Noise skipped msgs = %d, overflow = %d, runts = %d, min timing = %d\n", l.Noise, l.Overflow, l.Runt, l.ShortestPulse)
 }
 
 func readFromFile(input string, l *message.Listener) {
@@ -140,8 +145,8 @@ func newMessage(m message.Raw) {
 		for i, n := range n {
 			nr[i] = b * n
 		}
-		rmatch := msg.MatchRaw(m, 1, *tolerance);
+		rmatch := msg.MatchRaw(m, 1, *tolerance)
 		nmatch := msg.MatchRaw(nr, 1, *tolerance)
-		fmt.Printf("%s: len %d Raw %d (%d) Normalsed %d (%d)\n", msg.Name, len(m), rmatch * 100 / len(m), rmatch,  nmatch * 100 / len(m), nmatch)
+		fmt.Printf("%s: len %d Raw %d (%d) Normalised %d (%d)\n", msg.Name, len(m), rmatch*100/len(m), rmatch, nmatch*100/len(m), nmatch)
 	}
 }

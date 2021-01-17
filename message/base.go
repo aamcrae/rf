@@ -10,14 +10,14 @@ const (
 
 type Base struct {
 	Tolerance int
-	Count int
-	gcds [MAX_GCD]int
-	avg [MAX_GCD]int64
-	quality [MAX_GCD]int64
+	Count     int
+	gcds      [MAX_GCD]int
+	avg       [MAX_GCD]int64
+	quality   [MAX_GCD]int64
 }
 
 // Analyse the raw message and save the data.
-func (b* Base) Add(msg Raw) {
+func (b *Base) Add(msg Raw) {
 	gcd, est, q := msg.Analyse(b.Tolerance)
 	b.gcds[gcd]++
 	b.avg[gcd] += int64(est)
@@ -37,6 +37,6 @@ func (b *Base) EstimateBase(round int) (int, int) {
 			}
 		}
 	}
-	final := (b.avg[best] / int64(count) + int64(round/2)) / int64(round)
+	final := (b.avg[best]/int64(count) + int64(round/2)) / int64(round)
 	return int(final) * round, int(b.quality[best] / int64(count))
 }
