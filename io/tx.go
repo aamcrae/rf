@@ -11,7 +11,7 @@ import (
 	"github.com/aamcrae/pru"
 )
 
-const defaultGap = 8000
+const defaultGap = 4000
 const tx_event = 18
 
 type Transmitter struct {
@@ -64,21 +64,20 @@ func (tx *Transmitter) Send(msg []int, repeats int) error {
 		tout += t
 	}
 	tout *= repeats
-	fmt.Printf("Sending %d bits, %d repeasts, duration = %s\n", len(msg), repeats, time.Duration(tout)*time.Microsecond)
 	start := time.Now()
 	err := u.Run(prutx_img)
 	if err != nil {
 		return err
 	}
 	// Timeout is twice the expected transmission time
-	tout *= 2
-	ok, err := e.WaitTimeout(time.Duration(tout) * time.Microsecond)
+	timeout := time.Duration(tout*2) * time.Microsecond
+	ok, err := e.WaitTimeout(timeout)
 	if err != nil {
 		return err
 	}
 	if !ok {
 		u.Disable()
-		return fmt.Errorf("timeout")
+		return fmt.Errorf("transmit timeout (%s)", time.Duration(timeout))
 	}
 	fmt.Printf("Transmission took %s\n", time.Now().Sub(start).String())
 	return nil

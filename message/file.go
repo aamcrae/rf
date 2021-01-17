@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-// ReadMessageFile reads and unpacks a RF message file
+// ReadTagFile reads and unpacks a RF message file
 // The format is:
-//  <text-key> base message-timings
+//  <tag> message-timings
 //
 // The message timings are microsecond intervals for 1-0-1-0... transitions.
-func ReadMessageFile(name string) ([]*Message, error) {
-	msgs := make([]*Message, 0)
+func ReadTagFile(name string) (map[string][]Raw, error) {
+	msgs := make(map[string][]Raw)
 	f, err := os.Open(name)
 	if err != nil {
-		return msgs, err
+		return nil, err
 	}
 	defer f.Close()
 	scan := bufio.NewScanner(f)
@@ -25,14 +25,10 @@ func ReadMessageFile(name string) ([]*Message, error) {
 	for scan.Scan() {
 		lineno++
 		strs := strings.Split(scan.Text(), " ")
-		if len(strs) != 3 {
+		if len(strs) != 2 {
 			return msgs, fmt.Errorf("%s: line %d: unknown format", name, lineno)
 		}
-		base, err := strconv.ParseInt(strs[1], 10, 32)
-		if err != nil {
-			return msgs, fmt.Errorf("%s: line %d, bad base (%s)", name, lineno, strs[1])
-		}
-		ts := strings.Split(strs[2], ",")
+		ts := strings.Split(strs[1], ",")
 		if len(ts) < 5 {
 			return msgs, fmt.Errorf("%s: line %d: Bad message length", name, lineno)
 		}
@@ -44,9 +40,7 @@ func ReadMessageFile(name string) ([]*Message, error) {
 			}
 			raw = append(raw, int(v))
 		}
-		nm := NewMessage(Raw(raw), int(base))
-		nm.Name = strs[0]
-		msgs = append(msgs, nm)
+		msgs[strs[0]] = append(msgs[strs[0]], Raw(raw))
 	}
 	return msgs, nil
 }

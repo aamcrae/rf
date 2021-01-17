@@ -10,9 +10,10 @@ import (
 	"github.com/aamcrae/pru"
 )
 
-const rx_event = 18
+const rx_event = 19
 const rxBufferSize = 128 // 512 bytes each buffer
 const bufCount = 8       // 4K of buffers
+const rxUnit = 1
 
 type Receiver struct {
 	pru      *pru.PRU
@@ -43,7 +44,7 @@ func (rx *Receiver) Close() {
 }
 
 func (rx *Receiver) Start() (<-chan time.Duration, error) {
-	rx.unit = rx.pru.Unit(0)
+	rx.unit = rx.pru.Unit(rxUnit)
 	rx.event = rx.pru.Event(rx_event)
 	r := rx.unit.Ram.Open()
 	params := []interface{}{

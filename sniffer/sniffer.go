@@ -33,21 +33,19 @@ type msg struct {
 	messages []message.Raw
 }
 
-var reference = make(map[int][]*message.Message)
-var messages = make(map[int]*msg)
+var tags map[string][]message.Raw
+var lenMap = make(map[int]*msg)
+var messages []message.Raw
 var baseAll message.Base
 
 func main() {
 	flag.Parse()
 	baseAll.Tolerance = *tolerance
 	if len(*referenceFile) > 0 {
-		rList, err := message.ReadMessageFile(*referenceFile)
+		var err error
+		tags, err = message.ReadTagFile(*referenceFile)
 		if err != nil {
 			log.Fatalf("%s: %v", *referenceFile, err)
-		}
-		for _, r := range rList {
-			reference[len(r.Raw)] = append(reference[len(r.Raw)], r)
-			fmt.Printf("Ref msg %s, len %d\n", r.Name, len(r.Raw))
 		}
 	}
 	l := message.NewListener()
@@ -61,6 +59,16 @@ func main() {
 		capture(l)
 	}
 	fmt.Printf("Noise skipped msgs = %d, overflow = %d, runts = %d, min timing = %d\n", l.Noise, l.Overflow, l.Runt, l.ShortestPulse)
+	if len(*output) > 0 {
+		f, err := os.OpenFile(*output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		for _, m := range messages {
+			m.Write(f, *tag)
+		}
+	}
 }
 
 func readFromFile(input string, l *message.Listener) {
@@ -124,29 +132,15 @@ func reader(c <-chan time.Duration, wg *sync.WaitGroup, l *message.Listener) {
 func newMessage(m message.Raw) {
 	baseAll.Add(m)
 	l := len(m)
-	mp, ok := messages[l]
+	mp, ok := lenMap[l]
 	if !ok {
 		mp = new(msg)
 		mp.base.Tolerance = *tolerance
-		messages[l] = mp
+		lenMap[l] = mp
 	}
 	mp.messages = append(mp.messages, m)
+	messages = append(messages, m)
 	mp.base.Add(m)
 	base, quality := mp.base.EstimateBase(*round)
 	fmt.Printf("len %d, %d messages, estimated base %d (quality %d)\n", l, len(mp.messages), base, quality)
-	for _, msg := range reference[l] {
-		// Skip sync pulse when checking for equality
-		b := *base_time
-		if b == 0 {
-			b = base
-		}
-		n := m.Normalise(b)
-		nr := make([]int, len(n))
-		for i, n := range n {
-			nr[i] = b * n
-		}
-		rmatch := msg.MatchRaw(m, 1, *tolerance)
-		nmatch := msg.MatchRaw(nr, 1, *tolerance)
-		fmt.Printf("%s: len %d Raw %d (%d) Normalised %d (%d)\n", msg.Name, len(m), rmatch*100/len(m), rmatch, nmatch*100/len(m), nmatch)
-	}
 }

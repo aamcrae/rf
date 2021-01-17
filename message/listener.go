@@ -49,7 +49,7 @@ func (l *Listener) Next(tv int) Raw {
 		if len(l.timings) >= l.MinLen && len(l.timings) < l.MaxLen {
 			t := l.timings
 			l.timings = make([]int, 0)
-			return t // Return message
+			return t[1:] // Return message, skipping inter-message gap.
 		} else {
 			// Discard out-of-range message.
 			l.Runt++

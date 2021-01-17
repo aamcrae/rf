@@ -39,21 +39,3 @@ func NewMessage(raw Raw, base int) *Message {
 	m.RLE = rle.String()
 	return m
 }
-
-func (m *Message) MatchRaw(raw Raw, start int, tolerance int) int {
-	if len(raw) != len(m.Raw) {
-		return 0
-	}
-	count := 0
-	// Per bit tolerance
-	slop := (m.Base * tolerance) / 100
-	for i := start; i < len(raw); i++ {
-		allow := slop * m.Count[i]
-		mid := m.Count[i] * m.Base
-		r := raw[i]
-		if r >= (mid-allow) && r < (mid+allow) {
-			count++
-		}
-	}
-	return count
-}

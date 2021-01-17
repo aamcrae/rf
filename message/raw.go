@@ -1,7 +1,9 @@
 package message
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"sort"
 )
 
@@ -58,9 +60,33 @@ func (m Raw) Normalise(base int) []int {
 	return n
 }
 
+func (m Raw) Equal(raw Raw, tolerance int) int {
+	if len(raw) != len(m) {
+		return 0
+	}
+	count := 0
+	for i, r := range raw {
+		allow := m[i] * tolerance / 100
+		if r >= (m[i]-allow) && r < (m[i]+allow) {
+			count++
+		}
+	}
+	return count
+}
+
 // Return true if base is close to a factor of v.
 func gcd(v, base, t int) (int, bool) {
 	d := int(math.Round(float64(v) / float64(base)))
 	n := d * base
 	return d, n < (v+t) && n > (v-t)
+}
+
+func (m Raw) Write(f *os.File, tag string) {
+	fmt.Fprintf(f, "%s", tag)
+	sep := ' '
+	for _, t := range m {
+		fmt.Fprintf(f, "%c%d", sep, t)
+		sep = ','
+	}
+	fmt.Fprint(f, "\n")
 }

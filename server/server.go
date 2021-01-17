@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/aamcrae/rf/io"
 	"github.com/aamcrae/rf/message"
@@ -15,7 +16,8 @@ var port = flag.Int("port", 8080, "Web server port number")
 var gpio = flag.Int("gpio", 15, "PRU GPIO bit number")
 var messages = flag.String("messages", "/etc/rf-messages", "File containing messages")
 var verbose = flag.Bool("v", false, "Log more information")
-var repeats = flag.Int("repeats", 3, "Number of message repeats")
+var repeats = flag.Int("repeats", 1, "Number of message repeats")
+var gap = flag.Int("gap", 10, "Inter-message gap")
 
 func main() {
 	flag.Parse()
@@ -23,15 +25,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("NewTransmitter: %v", err)
 	}
-	mList, err := message.ReadMessageFile(*messages)
+	msgs, err := message.ReadTagFile(*messages)
 	if err != nil {
 		log.Fatalf("%s: %v", *messages, err)
 	}
-	for _, m := range mList {
+	for tag, m := range msgs {
 		if *verbose {
-			log.Printf("Message %s, length %d", m.Name, len(m.Raw))
+			log.Printf("Message %s, count %d", tag, len(m))
 		}
-		http.Handle(fmt.Sprintf("/tx/%s", m.Name), http.HandlerFunc(handler(tx, m)))
+		http.Handle(fmt.Sprintf("/tx/%s", tag), http.HandlerFunc(handler(tx, tag, m)))
 	}
 	url := fmt.Sprintf(":%d", *port)
 	if *verbose {
@@ -41,14 +43,17 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func handler(tx *io.Transmitter, msg *message.Message) func(http.ResponseWriter, *http.Request) {
+func handler(tx *io.Transmitter, tag string, msg []message.Raw) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if *verbose {
-			log.Printf("Sending message %s", msg.Name)
+			log.Printf("Sending tag %s %d messages", tag, len(msg))
 		}
-		err := tx.Send(msg.Raw, *repeats)
-		if err != nil {
-			log.Printf("Message %s: %v", msg.Name, err)
+		for i, m := range msg {
+			err := tx.Send(m, *repeats)
+			if err != nil {
+				log.Printf("Message %d: %v", tag, i, err)
+			}
+			time.Sleep(time.Duration(*gap) * time.Millisecond)
 		}
 	}
 }

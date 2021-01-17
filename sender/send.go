@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 
 	"github.com/aamcrae/rf/io"
 	"github.com/aamcrae/rf/message"
@@ -12,31 +13,33 @@ import (
 var file = flag.String("file", "", "Message file database")
 var msg = flag.String("message", "", "Message name")
 var repeats = flag.Int("repeat", 3, "Number of repeats")
+var gap = flag.Int("gap", 10, "Inter-message gap (milliseconds)")
 var gpio = flag.Int("gpio", 15, "Output GPIO number")
 
 func main() {
 	flag.Parse()
 
-	mList, err := message.ReadMessageFile(*file)
+	msgs, err := message.ReadTagFile(*file)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	log.Printf("%d messages read", len(mList))
-	msgs := make(map[string]*message.Message)
-	for _, m := range mList {
-		msgs[m.Name] = m
-	}
+	log.Printf("%d messages read", len(msgs))
 	tx, err := io.NewTransmitter(uint(*gpio))
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	defer tx.Close()
-	m, ok := msgs[*msg]
+	ml, ok := msgs[*msg]
 	if !ok {
 		log.Fatalf("%s: message not found", *msg)
 	}
-	err = tx.Send(m.Raw, *repeats)
-	if err != nil {
-		log.Fatalf("%s: %v", *msg, err)
+	for rep := 0; rep < *repeats; rep++ {
+		for i, m := range ml {
+			err = tx.Send(m, 1)
+			if err != nil {
+				log.Fatalf("%s (%d) repeat %d: %v", *msg, i+1, rep+1, err)
+			}
+			time.Sleep(time.Duration(*gap) * time.Millisecond)
+		}
 	}
 }
