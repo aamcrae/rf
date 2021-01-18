@@ -10,6 +10,9 @@ u32 repeat   r2  repeat count
 u32 length   r3  Length of data in words
 u32 data     r4  Address of data
 
+The GPIO initial value is 0, so the first time length
+is the length of time the bit is held low, then the next
+is how long it is held high, and so on.
 */
 #define DATA (5*4)  /* Start of data */
 
@@ -23,6 +26,7 @@ RepeatLoop:
 SendLoop:
     LBBO r8, r7, 0, 4 ; Load next pulse time to r5
     ADD r7, r7, 4     ; Increment address
+    SUB r8, r8, 6       ; Adjust time for extra instructions
 ;
 ; Test current bit, and set GPIO to 0 or 1
 ;
