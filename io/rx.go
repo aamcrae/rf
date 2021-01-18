@@ -70,7 +70,7 @@ func (rx *Receiver) Start() (<-chan time.Duration, error) {
 	rx.wg.Add(1)
 	rx.event.SetHandler(rx.fullBuffer)
 	go rx.readBuffer(send)
-	err := rx.unit.Run(prurx_img)
+	err := rx.unit.LoadAndRun(prurx_img)
 	if err != nil {
 		rx.Stop()
 		return nil, err

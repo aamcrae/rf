@@ -69,7 +69,7 @@ func (tx *Transmitter) Send(msg []int, repeats int) error {
 	}
 	tout *= repeats
 	start := time.Now()
-	err := u.Run(prutx_img)
+	err := u.LoadAndRun(prutx_img)
 	if err != nil {
 		return err
 	}
