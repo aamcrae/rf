@@ -1,5 +1,8 @@
 // Module to read raw signals
 
+//go:generate pasm -m prurx.p prurx
+//go:generate img2go.sh prurx io
+
 package io
 
 import (

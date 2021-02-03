@@ -1,5 +1,8 @@
 // Module to send raw messages to a transmitter
 
+//go:generate pasm -m prutx.p prutx
+//go:generate img2go.sh prutx io
+
 package io
 
 import (
